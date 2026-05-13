@@ -34,6 +34,18 @@ func TestCreateWorkout(t *testing.T) {
 	defer db.Close()
 
 	store := NewPostgresWorkoutStore(db)
+	userStore := NewPostgresUserStore(db)
+
+	testUser := &User{
+		Username: "melkey",
+		Email:    "melkey@example.com",
+	}
+
+	err := testUser.PasswordHash.Set("securepassword")
+	require.NoError(t, err)
+
+	err = userStore.CreateUser(testUser)
+	require.NoError(t, err)
 
 	tests := []struct {
 		name    string
@@ -43,6 +55,7 @@ func TestCreateWorkout(t *testing.T) {
 		{
 			name: "valid workout",
 			workout: &Workout{
+				UserID:          testUser.ID,
 				Title:           "push day",
 				Description:     "upper body day",
 				DurationMinutes: 60,
@@ -63,6 +76,7 @@ func TestCreateWorkout(t *testing.T) {
 		{
 			name: "workout with invalid entries",
 			workout: &Workout{
+				UserID:          testUser.ID,
 				Title:           "full body",
 				Description:     "complete workout",
 				DurationMinutes: 90,

@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"io/fs"
 
-	_ "github.com/jackc/pgx/v5/stdlib"
+	_ "github.com/jackc/pgx/v4/stdlib"
 	"github.com/pressly/goose/v3"
 )
 
@@ -15,13 +15,16 @@ func Open() (*sql.DB, error) {
 		return nil, fmt.Errorf("db: open %w", err)
 	}
 
+	if err := db.Ping(); err != nil {
+		return nil, fmt.Errorf("db: open %w", err)
+	}
 
-	fmt.Println("Connected to database")
+	fmt.Println("Connected to Database...")
 	return db, nil
 }
 
-func MigrateFS(db *sql.DB, migrationFS fs.FS, dir string) error {
-	goose.SetBaseFS(migrationFS)
+func MigrateFS(db *sql.DB, migrationsFS fs.FS, dir string) error {
+	goose.SetBaseFS(migrationsFS)
 	defer func() {
 		goose.SetBaseFS(nil)
 	}()
@@ -36,8 +39,7 @@ func Migrate(db *sql.DB, dir string) error {
 
 	err = goose.Up(db, dir)
 	if err != nil {
-		return fmt.Errorf("goose up %w", err)
+		return fmt.Errorf("goose up: %w", err)
 	}
-
 	return nil
 }
